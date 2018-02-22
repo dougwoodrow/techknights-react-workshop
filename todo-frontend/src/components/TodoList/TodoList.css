@@ -1,5 +1,13 @@
 .TodoListContainer {
     margin: 0 auto;
-    width: 400px;
+    width: 536px;
+}
+
+.TodoListContainer ul {
+    list-style: none;
+}
+
+.TodoListItem {
+    text-align: left;
 }
 

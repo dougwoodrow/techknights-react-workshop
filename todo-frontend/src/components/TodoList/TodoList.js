@@ -1,7 +1,11 @@
 import React, {Component} from 'react';
 import './TodoList.css';
+import axios from 'axios';
+import moment from 'moment';
 
 class TodoList extends Component {
+
+    url = "http://localhost:7777/api/todos";
 
     addNewTodo(e) {
         e.preventDefault();
@@ -10,25 +14,47 @@ class TodoList extends Component {
             title: this.state.title
         };
 
-        this.setState({todos: this.state.todos.concat(todo)});
-        console.log("todo added with title: ", this.state.title);
+        this.setState({todos: this.state.todos.concat(todo)}, () => {
+            this.saveTodos();
+        });
     }
 
     clearTodos(e) {
-        console.log("todos cleared");
+        this.setState({todos: []}, () => {
+            this.saveTodos();
+        });
     }
 
     setTitle(e) {
         this.setState({title: e.target.value});
     }
 
-    setCompletion(e) {
-        console.log("toggling item completion");
-        console.log(e.target.value);
+    setCompletion(idx, e) {
+        let isChecked = e.target.checked;
+        let todo = this.state.todos[idx];
+        todo.isCompleted = isChecked;
+        if(isChecked) {
+            todo.completedAt = new Date();
+        } else {
+            todo.completedAt = null;
+        }
+        this.saveTodos();
+    }
+
+    saveTodos() {
+        axios.post(this.url, {todos: this.state.todos}).then((res) => {
+            this.setState({todos: res.data});
+        }).catch(function (error) {
+            console.log(error);
+        });
     }
 
     componentDidMount() {
-        console.log("getting data from the server...");
+        axios.get(this.url).then((res) => {
+            this.setState({todos: res.data});
+        }).catch(function (error) {
+            console.log(error);
+        });
     }
 
     constructor(props) {
@@ -47,14 +73,14 @@ class TodoList extends Component {
         return (
             <div className="TodoListContainer">
                 <ul className="TodoList">
-                    {this.state.todos.map(function (todo, i) {
-                        return(
-                            <li id={"TodoListItem-" + i}>
+                    {this.state.todos.map((todo, i) => {
+                        return (
+                            <li key={i}>
                                 <div className="TodoListItem">
                                     <label>
-                                        <input onChange={() => console.log("yo!")} type="checkbox"/>
+                                        <input onChange={this.setCompletion.bind(this, i)} type="checkbox" checked={todo.isCompleted} />
                                         {todo.title}
-                                        <small>at</small>
+                                        {todo.completedAt && (<small> at {moment(todo.completedAt).format('MMM d, YYYY, h:mm:ss A')}</small>)}
                                     </label>
                                 </div>
                             </li>
